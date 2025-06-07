@@ -11,6 +11,7 @@ local arenas = {}
 local playerArena = {}
 
 local playersByRoute = {}
+local aimlabsPlayers = {}
 
 local function ensureArena(aType, id)
     arenas[aType] = arenas[aType] or {}
@@ -96,3 +97,35 @@ function arena.ExitGungame()
     gunGames[src] = nil
     Player(src).state:set("GunGame", nil, true)
 end
+
+-- AimLabs handlers
+function arena.StartAimLabs(src)
+    src = src or source
+    if not aimlabsPlayers[src] then
+        aimlabsPlayers[src] = true
+        local state = Player(src).state
+        state:set("AimLabs", true, true)
+        state:set("PVP", true, true)
+    end
+end
+
+function arena.ExitAimLabs(score, src)
+    src = src or source
+    if aimlabsPlayers[src] then
+        aimlabsPlayers[src] = nil
+        local state = Player(src).state
+        state:set("AimLabs", nil, true)
+        state:set("PVP", nil, true)
+    end
+end
+
+-- Simple command to toggle AimLabs
+RegisterCommand("aimlabs", function(src)
+    if src > 0 then
+        if aimlabsPlayers[src] then
+            arena.ExitAimLabs(nil, src)
+        else
+            arena.StartAimLabs(src)
+        end
+    end
+end)
